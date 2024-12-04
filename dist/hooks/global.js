@@ -56,15 +56,19 @@ var createGlobalBeforeReadHook = function (_a) {
             var doc;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, getGlobal({
-                            options: options,
-                            config: config,
-                            global: global,
-                            req: req,
-                        })];
+                    case 0:
+                        console.log('Fetchhing global ', global.slug);
+                        return [4 /*yield*/, getGlobal({
+                                options: options,
+                                config: config,
+                                global: global,
+                                req: req,
+                            })];
                     case 1:
                         doc = _b.sent();
+                        console.log('Found global', JSON.stringify(doc, null, 2));
                         if (!!doc) return [3 /*break*/, 3];
+                        console.log('Initializing  global ');
                         return [4 /*yield*/, initGlobal({ options: options, config: config, global: global, req: req })];
                     case 2:
                         doc = _b.sent();
@@ -155,23 +159,48 @@ var updateGlobal = function (_a) {
 var getGlobal = function (_a) {
     var options = _a.options, global = _a.global, req = _a.req;
     return __awaiter(void 0, void 0, void 0, function () {
-        var doc;
+        var draft, globalCollection, tenantId, draftsEnabled, doc, latestPublishedVersion;
         return __generator(this, function (_b) {
             switch (_b.label) {
-                case 0: return [4 /*yield*/, req.payload.find({
-                        req: req,
-                        collection: global.slug + "Globals",
-                        where: {
-                            tenant: {
-                                equals: extractTenantId({ options: options, req: req }),
+                case 0:
+                    draft = req.query.draft;
+                    globalCollection = global.slug + "Globals";
+                    tenantId = extractTenantId({ options: options, req: req });
+                    draftsEnabled = typeof draft === 'string' && ['1', 'true'].includes(draft);
+                    return [4 /*yield*/, req.payload.find({
+                            req: req,
+                            collection: globalCollection,
+                            where: {
+                                tenant: {
+                                    equals: tenantId,
+                                }
                             },
-                        },
-                        depth: 0,
-                        limit: 1,
-                    })];
+                            depth: 0,
+                            limit: 1,
+                        })];
                 case 1:
                     doc = (_b.sent()).docs[0];
-                    return [2 /*return*/, doc];
+                    if (!(!draftsEnabled && (doc === null || doc === void 0 ? void 0 : doc._status) === 'draft')) return [3 /*break*/, 3];
+                    console.log('Fetching published version: ');
+                    return [4 /*yield*/, req.payload.findVersions({
+                            req: req,
+                            collection: globalCollection,
+                            where: {
+                                'version.tenant': {
+                                    equals: tenantId
+                                },
+                                'version._status': {
+                                    equals: 'published'
+                                }
+                            },
+                            depth: 0,
+                            limit: 1,
+                            sort: '-createdAt',
+                        })];
+                case 2:
+                    latestPublishedVersion = (_b.sent()).docs[0];
+                    return [2 /*return*/, latestPublishedVersion === null || latestPublishedVersion === void 0 ? void 0 : latestPublishedVersion.version];
+                case 3: return [2 /*return*/, doc];
             }
         });
     });

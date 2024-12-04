@@ -20,6 +20,7 @@ export const createGlobalBeforeReadHook =
     global: GlobalConfig;
   }): BeforeReadHook =>
   async ({ req }) => {
+    console.log('Fetchhing global ', global.slug)
     let doc = await getGlobal({
       options,
       config,
@@ -27,7 +28,10 @@ export const createGlobalBeforeReadHook =
       req,
     });
 
+    console.log('Found global', JSON.stringify(doc, null, 2))
+
     if (!doc) {
+      console.log('Initializing  global ')
       doc = await initGlobal({ options, config, global, req });
     }
 
@@ -156,18 +160,49 @@ const getGlobal = async ({
   global: GlobalConfig;
   req: PayloadRequest;
 }) => {
+  const { draft } = req.query
+  const globalCollection = global.slug + "Globals"
+
+  const tenantId = extractTenantId({ options, req })
+  const draftsEnabled = typeof draft === 'string' && ['1', 'true'].includes(draft)
+
   const {
     docs: [doc],
   } = await req.payload.find({
     req,
-    collection: global.slug + "Globals",
+    collection: globalCollection,
     where: {
       tenant: {
-        equals: extractTenantId({ options, req }),
-      },
+        equals: tenantId,
+      }
     },
     depth: 0,
     limit: 1,
   });
+
+  if (!draftsEnabled && doc?._status === 'draft') {
+    console.log('Fetching published version: ')
+    const {
+      docs: [latestPublishedVersion],
+    } = await req.payload.findVersions({
+      req,
+      collection: globalCollection,
+      where: {
+        'version.tenant': {
+          equals: tenantId
+        },
+        'version._status': {
+          equals: 'published'
+        }
+      },
+      depth: 0,
+      limit: 1,
+      sort: '-createdAt',
+      
+    });
+
+    return latestPublishedVersion?.version
+  }
+
   return doc;
 };
