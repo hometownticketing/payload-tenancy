@@ -56,19 +56,15 @@ var createGlobalBeforeReadHook = function (_a) {
             var doc;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0:
-                        console.log('Fetchhing global ', global.slug);
-                        return [4 /*yield*/, getGlobal({
-                                options: options,
-                                config: config,
-                                global: global,
-                                req: req,
-                            })];
+                    case 0: return [4 /*yield*/, getGlobal({
+                            options: options,
+                            config: config,
+                            global: global,
+                            req: req,
+                        })];
                     case 1:
                         doc = _b.sent();
-                        console.log('Found global', JSON.stringify(doc, null, 2));
                         if (!!doc) return [3 /*break*/, 3];
-                        console.log('Initializing  global ');
                         return [4 /*yield*/, initGlobal({ options: options, config: config, global: global, req: req })];
                     case 2:
                         doc = _b.sent();

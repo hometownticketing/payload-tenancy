@@ -20,7 +20,6 @@ export const createGlobalBeforeReadHook =
     global: GlobalConfig;
   }): BeforeReadHook =>
   async ({ req }) => {
-    console.log('Fetchhing global ', global.slug)
     let doc = await getGlobal({
       options,
       config,
@@ -28,10 +27,7 @@ export const createGlobalBeforeReadHook =
       req,
     });
 
-    console.log('Found global', JSON.stringify(doc, null, 2))
-
     if (!doc) {
-      console.log('Initializing  global ')
       doc = await initGlobal({ options, config, global, req });
     }
 
