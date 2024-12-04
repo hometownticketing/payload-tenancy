@@ -177,7 +177,6 @@ const getGlobal = async ({
   });
 
   if (!draftsEnabled && doc?._status === 'draft') {
-    console.log('Fetching published version: ')
     const {
       docs: [latestPublishedVersion],
     } = await req.payload.findVersions({
