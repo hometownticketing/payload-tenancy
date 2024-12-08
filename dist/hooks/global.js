@@ -177,7 +177,6 @@ var getGlobal = function (_a) {
                 case 1:
                     doc = (_b.sent()).docs[0];
                     if (!(!draftsEnabled && (doc === null || doc === void 0 ? void 0 : doc._status) === 'draft')) return [3 /*break*/, 3];
-                    console.log('Fetching published version: ');
                     return [4 /*yield*/, req.payload.findVersions({
                             req: req,
                             collection: globalCollection,
