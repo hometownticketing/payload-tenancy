@@ -162,7 +162,7 @@ var getGlobal = function (_a) {
                     globalCollection = global.slug + "Globals";
                     tenantId = extractTenantId({ options: options, req: req });
                     draft = (req.payloadAPI === "GraphQL" ? req.body.variables : req.query).draft;
-                    isPublished = ["1", "true"].includes(draft.toString());
+                    isPublished = draft ? ["1", "true"].includes(draft.toString()) : false;
                     return [4 /*yield*/, req.payload.find({
                             req: req,
                             collection: globalCollection,
