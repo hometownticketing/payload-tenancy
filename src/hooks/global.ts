@@ -159,9 +159,11 @@ const getGlobal = async ({
   const globalCollection = global.slug + "Globals";
 
   const tenantId = extractTenantId({ options, req });
+
   const { draft } =
     req.payloadAPI === "GraphQL" ? req.body.variables : req.query;
-  const isPublished = ["1", "true"].includes(draft.toString());
+
+  const isPublished = draft ? ["1", "true"].includes(draft.toString()) : false;
 
   const {
     docs: [doc],
