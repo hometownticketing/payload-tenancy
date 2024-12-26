@@ -48,6 +48,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createGlobalAfterChangeHook = exports.createGlobalBeforeChangeHook = exports.createGlobalBeforeReadHook = void 0;
+var language_1 = require("graphql/language");
+var graphql_1 = require("../utils/graphql");
 var createGlobalBeforeReadHook = function (_a) {
     var options = _a.options, config = _a.config, global = _a.global;
     return function (_a) {
@@ -64,12 +66,7 @@ var createGlobalBeforeReadHook = function (_a) {
                         })];
                     case 1:
                         doc = _b.sent();
-                        if (!!doc) return [3 /*break*/, 3];
-                        return [4 /*yield*/, initGlobal({ options: options, config: config, global: global, req: req })];
-                    case 2:
-                        doc = _b.sent();
-                        _b.label = 3;
-                    case 3: return [2 /*return*/, doc];
+                        return [2 /*return*/, doc];
                 }
             });
         });
@@ -155,15 +152,27 @@ var updateGlobal = function (_a) {
 var getGlobal = function (_a) {
     var options = _a.options, global = _a.global, req = _a.req;
     return __awaiter(void 0, void 0, void 0, function () {
-        var globalCollection, tenantId, draft, isPublished, doc, latestPublishedVersion;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var globalCollection, payload, tenantId, isDraft, queryDoc, gqlTypes, gqlQuery, doc, latestPublishedVersion;
+        var _b, _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
                     globalCollection = global.slug + "Globals";
+                    payload = req.payload;
                     tenantId = extractTenantId({ options: options, req: req });
-                    draft = (req.payloadAPI === "GraphQL" ? req.body.variables : req.query).draft;
-                    isPublished = draft ? ["1", "true"].includes(draft.toString()) : false;
-                    return [4 /*yield*/, req.payload.find({
+                    isDraft = false;
+                    if (req.payloadAPI === "GraphQL") {
+                        queryDoc = (0, language_1.parse)(req.body.query);
+                        gqlTypes = getQueryNameOfGlobal(req, global.slug);
+                        if (gqlTypes === null || gqlTypes === void 0 ? void 0 : gqlTypes.type) {
+                            gqlQuery = (0, graphql_1.findQueryByName)(queryDoc, gqlTypes.type);
+                            isDraft = Boolean((0, graphql_1.findArgumentByName)(gqlQuery, req.body.variables, 'draft'));
+                        }
+                    }
+                    else {
+                        isDraft = ["1", "true"].includes((_c = (_b = req === null || req === void 0 ? void 0 : req.query) === null || _b === void 0 ? void 0 : _b.draft) === null || _c === void 0 ? void 0 : _c.toString());
+                    }
+                    return [4 /*yield*/, payload.find({
                             req: req,
                             collection: globalCollection,
                             where: {
@@ -173,11 +182,12 @@ var getGlobal = function (_a) {
                             },
                             depth: 0,
                             limit: 1,
+                            pagination: false,
                         })];
                 case 1:
-                    doc = (_b.sent()).docs[0];
-                    if (!(!isPublished && (doc === null || doc === void 0 ? void 0 : doc._status) === "draft")) return [3 /*break*/, 3];
-                    return [4 /*yield*/, req.payload.findVersions({
+                    doc = (_d.sent()).docs[0];
+                    if (!(!isDraft && (doc === null || doc === void 0 ? void 0 : doc._status) === "draft")) return [3 /*break*/, 3];
+                    return [4 /*yield*/, payload.findVersions({
                             req: req,
                             collection: globalCollection,
                             where: {
@@ -190,13 +200,31 @@ var getGlobal = function (_a) {
                             },
                             depth: 0,
                             limit: 1,
-                            sort: "-createdAt",
+                            sort: "-updatedAt",
                         })];
                 case 2:
-                    latestPublishedVersion = (_b.sent()).docs[0];
+                    latestPublishedVersion = (_d.sent()).docs[0];
                     return [2 /*return*/, latestPublishedVersion === null || latestPublishedVersion === void 0 ? void 0 : latestPublishedVersion.version];
                 case 3: return [2 /*return*/, doc];
             }
         });
     });
+};
+var globalToTypes = {};
+var getQueryNameOfGlobal = function (req, slug) {
+    var _a, _b, _c;
+    var globals = req.payload.globals;
+    if (globalToTypes[slug])
+        return globalToTypes[slug];
+    for (var i in globals.config) {
+        if (globals.config[i].slug === slug) {
+            var gql = (_a = globals.graphQL) === null || _a === void 0 ? void 0 : _a[i];
+            var types = {
+                type: (_b = gql === null || gql === void 0 ? void 0 : gql.type) === null || _b === void 0 ? void 0 : _b.name,
+                versionType: (_c = gql === null || gql === void 0 ? void 0 : gql.versionType) === null || _c === void 0 ? void 0 : _c.name
+            };
+            globalToTypes[slug] = types;
+            return types;
+        }
+    }
 };

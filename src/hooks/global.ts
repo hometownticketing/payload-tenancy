@@ -1,3 +1,4 @@
+import { parse } from 'graphql/language';
 import {
   AfterChangeHook,
   BeforeChangeHook,
@@ -8,6 +9,7 @@ import { RequestWithTenant } from "../utils/requestWithTenant";
 import { TenancyOptions } from "../options";
 import { Config } from "payload/config";
 import { PayloadRequest } from "payload/types";
+import { findQueryByName, findArgumentByName } from "../utils/graphql";
 
 export const createGlobalBeforeReadHook =
   ({
@@ -19,20 +21,16 @@ export const createGlobalBeforeReadHook =
     config: Config;
     global: GlobalConfig;
   }): BeforeReadHook =>
-  async ({ req }) => {
-    let doc = await getGlobal({
-      options,
-      config,
-      global,
-      req,
-    });
-
-    if (!doc) {
-      doc = await initGlobal({ options, config, global, req });
-    }
-
-    return doc;
-  };
+    async ({ req }) => {
+        let doc = await getGlobal({
+          options,
+          config,
+          global,
+          req,
+        });
+    
+        return doc;
+      };
 
 export const createGlobalBeforeChangeHook =
   ({
@@ -157,17 +155,26 @@ const getGlobal = async ({
   req: PayloadRequest;
 }) => {
   const globalCollection = global.slug + "Globals";
-
+  const { payload } = req
   const tenantId = extractTenantId({ options, req });
 
-  const { draft } =
-    req.payloadAPI === "GraphQL" ? req.body.variables : req.query;
+  let isDraft = false
 
-  const isPublished = draft ? ["1", "true"].includes(draft.toString()) : false;
+  if (req.payloadAPI === "GraphQL") {
+    const queryDoc = parse(req.body.query)
+    const gqlTypes = getQueryNameOfGlobal(req, global.slug)
+
+    if (gqlTypes?.type) {
+      const gqlQuery = findQueryByName(queryDoc, gqlTypes.type)
+      isDraft = Boolean(findArgumentByName(gqlQuery, req.body.variables, 'draft'))
+    }
+  } else {
+    isDraft = ["1", "true"].includes(req?.query?.draft?.toString())
+  }
 
   const {
     docs: [doc],
-  } = await req.payload.find({
+  } = await payload.find({
     req,
     collection: globalCollection,
     where: {
@@ -177,12 +184,13 @@ const getGlobal = async ({
     },
     depth: 0,
     limit: 1,
+    pagination: false,
   });
 
-  if (!isPublished && doc?._status === "draft") {
+  if (!isDraft && doc?._status === "draft") {
     const {
       docs: [latestPublishedVersion],
-    } = await req.payload.findVersions({
+    } = await payload.findVersions({
       req,
       collection: globalCollection,
       where: {
@@ -195,7 +203,7 @@ const getGlobal = async ({
       },
       depth: 0,
       limit: 1,
-      sort: "-createdAt",
+      sort: "-updatedAt",
     });
 
     return latestPublishedVersion?.version;
@@ -203,3 +211,28 @@ const getGlobal = async ({
 
   return doc;
 };
+
+interface GlobalGraphQLTypes {
+  type?: string
+  versionType: string
+}
+
+const globalToTypes: Record<string, GlobalGraphQLTypes> = {}
+const getQueryNameOfGlobal = (req: PayloadRequest, slug: string): GlobalGraphQLTypes | undefined => {
+  const { payload: { globals } } = req
+
+  if (globalToTypes[slug]) return globalToTypes[slug]
+
+  for (const i in globals.config) {
+    if (globals.config[i].slug === slug) {
+      const gql = globals.graphQL?.[i]
+      const types = {
+        type: gql?.type?.name,
+        versionType: gql?.versionType?.name
+      }
+
+      globalToTypes[slug] = types
+      return types
+    }
+  }
+}
