@@ -1,4 +1,4 @@
-import { parse } from 'graphql/language';
+import { parse } from "graphql/language";
 import {
   AfterChangeHook,
   BeforeChangeHook,
@@ -21,16 +21,16 @@ export const createGlobalBeforeReadHook =
     config: Config;
     global: GlobalConfig;
   }): BeforeReadHook =>
-    async ({ req }) => {
-        let doc = await getGlobal({
-          options,
-          config,
-          global,
-          req,
-        });
-    
-        return doc;
-      };
+  async ({ req }) => {
+    const doc = await getGlobal({
+      options,
+      config,
+      global,
+      req,
+    });
+
+    return doc;
+  };
 
 export const createGlobalBeforeChangeHook =
   ({
@@ -155,21 +155,23 @@ const getGlobal = async ({
   req: PayloadRequest;
 }) => {
   const globalCollection = global.slug + "Globals";
-  const { payload } = req
+  const { payload } = req;
   const tenantId = extractTenantId({ options, req });
 
-  let isDraft = false
+  let isDraft = false;
 
   if (req.payloadAPI === "GraphQL") {
-    const queryDoc = parse(req.body.query)
-    const gqlTypes = getQueryNameOfGlobal(req, global.slug)
+    const queryDoc = parse(req.body.query);
+    const gqlTypes = getQueryNameOfGlobal(req, global.slug);
 
     if (gqlTypes?.type) {
-      const gqlQuery = findQueryByName(queryDoc, gqlTypes.type)
-      isDraft = Boolean(findArgumentByName(gqlQuery, req.body.variables, 'draft'))
+      const gqlQuery = findQueryByName(queryDoc, gqlTypes.type);
+      isDraft = Boolean(
+        findArgumentByName(gqlQuery, req.body.variables, "draft"),
+      );
     }
   } else {
-    isDraft = ["1", "true"].includes(req?.query?.draft?.toString())
+    isDraft = ["1", "true"].includes(req?.query?.draft?.toString());
   }
 
   const {
@@ -213,26 +215,31 @@ const getGlobal = async ({
 };
 
 interface GlobalGraphQLTypes {
-  type?: string
-  versionType: string
+  type?: string;
+  versionType: string;
 }
 
-const globalToTypes: Record<string, GlobalGraphQLTypes> = {}
-const getQueryNameOfGlobal = (req: PayloadRequest, slug: string): GlobalGraphQLTypes | undefined => {
-  const { payload: { globals } } = req
+const globalToTypes: Record<string, GlobalGraphQLTypes> = {};
+const getQueryNameOfGlobal = (
+  req: PayloadRequest,
+  slug: string,
+): GlobalGraphQLTypes | undefined => {
+  const {
+    payload: { globals },
+  } = req;
 
-  if (globalToTypes[slug]) return globalToTypes[slug]
+  if (globalToTypes[slug]) return globalToTypes[slug];
 
   for (const i in globals.config) {
     if (globals.config[i].slug === slug) {
-      const gql = globals.graphQL?.[i]
+      const gql = globals.graphQL?.[i];
       const types = {
         type: gql?.type?.name,
-        versionType: gql?.versionType?.name
-      }
+        versionType: gql?.versionType?.name,
+      };
 
-      globalToTypes[slug] = types
-      return types
+      globalToTypes[slug] = types;
+      return types;
     }
   }
-}
+};
