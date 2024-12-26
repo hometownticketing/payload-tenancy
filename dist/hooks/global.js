@@ -166,7 +166,7 @@ var getGlobal = function (_a) {
                         gqlTypes = getQueryNameOfGlobal(req, global.slug);
                         if (gqlTypes === null || gqlTypes === void 0 ? void 0 : gqlTypes.type) {
                             gqlQuery = (0, graphql_1.findQueryByName)(queryDoc, gqlTypes.type);
-                            isDraft = Boolean((0, graphql_1.findArgumentByName)(gqlQuery, req.body.variables, 'draft'));
+                            isDraft = Boolean((0, graphql_1.findArgumentByName)(gqlQuery, req.body.variables, "draft"));
                         }
                     }
                     else {
@@ -221,7 +221,7 @@ var getQueryNameOfGlobal = function (req, slug) {
             var gql = (_a = globals.graphQL) === null || _a === void 0 ? void 0 : _a[i];
             var types = {
                 type: (_b = gql === null || gql === void 0 ? void 0 : gql.type) === null || _b === void 0 ? void 0 : _b.name,
-                versionType: (_c = gql === null || gql === void 0 ? void 0 : gql.versionType) === null || _c === void 0 ? void 0 : _c.name
+                versionType: (_c = gql === null || gql === void 0 ? void 0 : gql.versionType) === null || _c === void 0 ? void 0 : _c.name,
             };
             globalToTypes[slug] = types;
             return types;
