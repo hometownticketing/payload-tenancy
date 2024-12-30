@@ -165,23 +165,23 @@ const getGlobal = async ({
   const globalCollection = global.slug + "Globals";
   const { payload } = req;
   const tenantId = extractTenantId({ options, req });
-  let isDraft = false;
+  let isDraft = draft;
 
-  if (req.payloadAPI === "GraphQL" && draft === undefined) {
-    const queryDoc = parse(req.body.query);
-    const gqlTypes = getQueryNameOfGlobal(req, global.slug);
-    if (gqlTypes?.type) {
-      const gqlQuery = findQueryByName(queryDoc, gqlTypes.type);
-      if (gqlQuery) {
-        isDraft = Boolean(
-          findArgumentByName(gqlQuery, req.body.variables, "draft"),
-        );
+  if (draft === undefined) {
+    if (req.payloadAPI === "GraphQL") {
+      const queryDoc = parse(req.body.query);
+      const gqlTypes = getQueryNameOfGlobal(req, global.slug);
+      if (gqlTypes?.type) {
+        const gqlQuery = findQueryByName(queryDoc, gqlTypes.type);
+        if (gqlQuery) {
+          isDraft = Boolean(
+            findArgumentByName(gqlQuery, req.body.variables, "draft"),
+          );
+        }
       }
+    } else {
+      isDraft = ["1", "true"].includes(req?.query?.draft?.toString());
     }
-  } else if (req.payloadAPI === "REST") {
-    isDraft = ["1", "true"].includes(req?.query?.draft?.toString());
-  } else {
-    isDraft = draft;
   }
 
   const {
@@ -218,7 +218,9 @@ const getGlobal = async ({
       sort: "-updatedAt",
     });
 
-    return latestPublishedVersion?.version;
+    if (latestPublishedVersion?.version) {
+      return latestPublishedVersion?.version;
+    }
   }
   return doc;
 };

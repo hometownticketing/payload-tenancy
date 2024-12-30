@@ -165,22 +165,21 @@ var getGlobal = function (_a) {
                     globalCollection = global.slug + "Globals";
                     payload = req.payload;
                     tenantId = extractTenantId({ options: options, req: req });
-                    isDraft = false;
-                    if (req.payloadAPI === "GraphQL" && draft === undefined) {
-                        queryDoc = (0, language_1.parse)(req.body.query);
-                        gqlTypes = getQueryNameOfGlobal(req, global.slug);
-                        if (gqlTypes === null || gqlTypes === void 0 ? void 0 : gqlTypes.type) {
-                            gqlQuery = (0, graphql_1.findQueryByName)(queryDoc, gqlTypes.type);
-                            if (gqlQuery) {
-                                isDraft = Boolean((0, graphql_1.findArgumentByName)(gqlQuery, req.body.variables, "draft"));
+                    isDraft = draft;
+                    if (draft === undefined) {
+                        if (req.payloadAPI === "GraphQL") {
+                            queryDoc = (0, language_1.parse)(req.body.query);
+                            gqlTypes = getQueryNameOfGlobal(req, global.slug);
+                            if (gqlTypes === null || gqlTypes === void 0 ? void 0 : gqlTypes.type) {
+                                gqlQuery = (0, graphql_1.findQueryByName)(queryDoc, gqlTypes.type);
+                                if (gqlQuery) {
+                                    isDraft = Boolean((0, graphql_1.findArgumentByName)(gqlQuery, req.body.variables, "draft"));
+                                }
                             }
                         }
-                    }
-                    else if (req.payloadAPI === "REST") {
-                        isDraft = ["1", "true"].includes((_c = (_b = req === null || req === void 0 ? void 0 : req.query) === null || _b === void 0 ? void 0 : _b.draft) === null || _c === void 0 ? void 0 : _c.toString());
-                    }
-                    else {
-                        isDraft = draft;
+                        else {
+                            isDraft = ["1", "true"].includes((_c = (_b = req === null || req === void 0 ? void 0 : req.query) === null || _b === void 0 ? void 0 : _b.draft) === null || _c === void 0 ? void 0 : _c.toString());
+                        }
                     }
                     return [4 /*yield*/, payload.find({
                             req: req,
@@ -214,7 +213,10 @@ var getGlobal = function (_a) {
                         })];
                 case 2:
                     latestPublishedVersion = (_d.sent()).docs[0];
-                    return [2 /*return*/, latestPublishedVersion === null || latestPublishedVersion === void 0 ? void 0 : latestPublishedVersion.version];
+                    if (latestPublishedVersion === null || latestPublishedVersion === void 0 ? void 0 : latestPublishedVersion.version) {
+                        return [2 /*return*/, latestPublishedVersion === null || latestPublishedVersion === void 0 ? void 0 : latestPublishedVersion.version];
+                    }
+                    _d.label = 3;
                 case 3: return [2 /*return*/, doc];
             }
         });
