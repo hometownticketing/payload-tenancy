@@ -66,7 +66,10 @@ var createGlobalBeforeReadHook = function (_a) {
                         })];
                     case 1:
                         doc = _b.sent();
-                        return [2 /*return*/, doc];
+                        if (!!doc) return [3 /*break*/, 3];
+                        return [4 /*yield*/, initGlobal({ options: options, config: config, global: global, req: req })];
+                    case 2: return [2 /*return*/, _b.sent()];
+                    case 3: return [2 /*return*/, doc];
                 }
             });
         });
@@ -86,6 +89,7 @@ var createGlobalBeforeChangeHook = function (_a) {
                             config: config,
                             global: global,
                             req: req,
+                            draft: true,
                         })];
                     case 1:
                         doc = _b.sent();
@@ -114,6 +118,7 @@ var createGlobalAfterChangeHook = function (_a) {
             config: config,
             global: global,
             req: req,
+            draft: true,
         });
     };
 };
@@ -150,7 +155,7 @@ var updateGlobal = function (_a) {
     });
 };
 var getGlobal = function (_a) {
-    var options = _a.options, global = _a.global, req = _a.req;
+    var options = _a.options, global = _a.global, req = _a.req, draft = _a.draft;
     return __awaiter(void 0, void 0, void 0, function () {
         var globalCollection, payload, tenantId, isDraft, queryDoc, gqlTypes, gqlQuery, doc, latestPublishedVersion;
         var _b, _c;
@@ -161,16 +166,21 @@ var getGlobal = function (_a) {
                     payload = req.payload;
                     tenantId = extractTenantId({ options: options, req: req });
                     isDraft = false;
-                    if (req.payloadAPI === "GraphQL") {
+                    if (req.payloadAPI === "GraphQL" && draft === undefined) {
                         queryDoc = (0, language_1.parse)(req.body.query);
                         gqlTypes = getQueryNameOfGlobal(req, global.slug);
                         if (gqlTypes === null || gqlTypes === void 0 ? void 0 : gqlTypes.type) {
                             gqlQuery = (0, graphql_1.findQueryByName)(queryDoc, gqlTypes.type);
-                            isDraft = Boolean((0, graphql_1.findArgumentByName)(gqlQuery, req.body.variables, "draft"));
+                            if (gqlQuery) {
+                                isDraft = Boolean((0, graphql_1.findArgumentByName)(gqlQuery, req.body.variables, "draft"));
+                            }
                         }
                     }
-                    else {
+                    else if (req.payloadAPI === "REST") {
                         isDraft = ["1", "true"].includes((_c = (_b = req === null || req === void 0 ? void 0 : req.query) === null || _b === void 0 ? void 0 : _b.draft) === null || _c === void 0 ? void 0 : _c.toString());
+                    }
+                    else {
+                        isDraft = draft;
                     }
                     return [4 /*yield*/, payload.find({
                             req: req,
