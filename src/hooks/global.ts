@@ -29,6 +29,10 @@ export const createGlobalBeforeReadHook =
       req,
     });
 
+    if (!doc) {
+      return await initGlobal({ options, config, global, req });
+    }
+
     return doc;
   };
 
@@ -48,6 +52,7 @@ export const createGlobalBeforeChangeHook =
       config,
       global,
       req,
+      draft: true,
     });
 
     if (!doc) {
@@ -75,6 +80,7 @@ export const createGlobalAfterChangeHook =
       config,
       global,
       req,
+      draft: true,
     });
 
 const extractTenantId = ({
@@ -148,30 +154,34 @@ const getGlobal = async ({
   options,
   global,
   req,
+  draft,
 }: {
   options: TenancyOptions;
   config: Config;
   global: GlobalConfig;
   req: PayloadRequest;
+  draft?: boolean;
 }) => {
   const globalCollection = global.slug + "Globals";
   const { payload } = req;
   const tenantId = extractTenantId({ options, req });
+  let isDraft = draft;
 
-  let isDraft = false;
-
-  if (req.payloadAPI === "GraphQL") {
-    const queryDoc = parse(req.body.query);
-    const gqlTypes = getQueryNameOfGlobal(req, global.slug);
-
-    if (gqlTypes?.type) {
-      const gqlQuery = findQueryByName(queryDoc, gqlTypes.type);
-      isDraft = Boolean(
-        findArgumentByName(gqlQuery, req.body.variables, "draft"),
-      );
+  if (draft === undefined) {
+    if (req.payloadAPI === "GraphQL") {
+      const queryDoc = parse(req.body.query);
+      const gqlTypes = getQueryNameOfGlobal(req, global.slug);
+      if (gqlTypes?.type) {
+        const gqlQuery = findQueryByName(queryDoc, gqlTypes.type);
+        if (gqlQuery) {
+          isDraft = Boolean(
+            findArgumentByName(gqlQuery, req.body.variables, "draft"),
+          );
+        }
+      }
+    } else {
+      isDraft = ["1", "true"].includes(req?.query?.draft?.toString());
     }
-  } else {
-    isDraft = ["1", "true"].includes(req?.query?.draft?.toString());
   }
 
   const {
@@ -208,9 +218,10 @@ const getGlobal = async ({
       sort: "-updatedAt",
     });
 
-    return latestPublishedVersion?.version;
+    if (latestPublishedVersion?.version) {
+      return latestPublishedVersion?.version;
+    }
   }
-
   return doc;
 };
 
