@@ -1,5 +1,5 @@
 import { TenancyOptions, validateOptions } from "./options";
-import { Plugin } from "payload/config";
+import { Endpoint, Plugin } from "payload/config";
 import {
   createResourceCreateAccess,
   createResourceReadAccess,
@@ -32,6 +32,11 @@ import { overrideFields } from "./utils/overrideFields";
 import { transformGlobalCollectionField } from "./utils/transformGlobalCollectionField";
 import { transformGlobalField } from "./utils/transformGlobalField";
 import { CollectionConfig } from "payload/types";
+import {
+  createGetVersionsRoute,
+  createGetVersionByIdRoute,
+  createRestoreVersionRoute,
+} from "./handlers/versions";
 
 export const tenancy =
   (partialOptions: Partial<TenancyOptions> = {}): Plugin =>
@@ -56,6 +61,12 @@ export const tenancy =
           ? global
           : {
               ...global,
+              endpoints: [
+                ...(Array.isArray(global?.endpoints) ? global.endpoints : []),
+                createGetVersionsRoute(options, global),
+                createGetVersionByIdRoute(global),
+                createRestoreVersionRoute(global),
+              ],
               fields: overrideFields(
                 global.fields.map(transformGlobalField),
                 [],

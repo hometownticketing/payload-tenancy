@@ -40,6 +40,7 @@ var global_1 = require("./hooks/global");
 var overrideFields_1 = require("./utils/overrideFields");
 var transformGlobalCollectionField_1 = require("./utils/transformGlobalCollectionField");
 var transformGlobalField_1 = require("./utils/transformGlobalField");
+var versions_1 = require("./handlers/versions");
 var tenancy = function (partialOptions) {
     if (partialOptions === void 0) { partialOptions = {}; }
     return function (config) {
@@ -60,7 +61,11 @@ var tenancy = function (partialOptions) {
                 var _a, _b, _c, _d, _e, _f;
                 return options.sharedGlobals.includes(global.slug)
                     ? global
-                    : __assign(__assign({}, global), { fields: (0, overrideFields_1.overrideFields)(global.fields.map(transformGlobalField_1.transformGlobalField), [], [
+                    : __assign(__assign({}, global), { endpoints: __spreadArray(__spreadArray([], (Array.isArray(global === null || global === void 0 ? void 0 : global.endpoints) ? global.endpoints : []), true), [
+                            (0, versions_1.createGetVersionsRoute)(options, global),
+                            (0, versions_1.createGetVersionByIdRoute)(global),
+                            (0, versions_1.createRestoreVersionRoute)(global),
+                        ], false), fields: (0, overrideFields_1.overrideFields)(global.fields.map(transformGlobalField_1.transformGlobalField), [], [
                             (0, resourceTenant_1.createResourceTenantField)({
                                 options: options,
                                 config: config,

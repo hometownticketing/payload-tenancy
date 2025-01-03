@@ -11,6 +11,23 @@ import { Config } from "payload/config";
 import { PayloadRequest } from "payload/types";
 import { findQueryByName, findArgumentByName } from "../utils/graphql";
 
+interface QueryParams {
+  depth?: string;
+  limit?: string;
+  page?: string;
+}
+
+interface ParsedParams {
+  depth: number;
+  limit: number;
+  page: number;
+}
+
+// Default values as constants
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+const DEFAULT_DEPTH = 1;
+
 export const createGlobalBeforeReadHook =
   ({
     options,
@@ -253,4 +270,76 @@ const getQueryNameOfGlobal = (
       return types;
     }
   }
+};
+
+// Utility function to parse and validate params
+const parseParams = (params: QueryParams): ParsedParams => {
+  return {
+    page: params.page ? Math.max(1, parseInt(params.page)) : DEFAULT_PAGE,
+    limit: params.limit ? Math.max(1, parseInt(params.limit)) : DEFAULT_LIMIT,
+    depth: params.depth ? Math.max(1, parseInt(params.depth)) : DEFAULT_DEPTH,
+  };
+};
+
+export const getGlobalVersions = async ({
+  options,
+  global,
+  req,
+}: {
+  options: TenancyOptions;
+  global: GlobalConfig;
+  req: PayloadRequest;
+}) => {
+  const globalCollection = global.slug + "Globals";
+  const tenantId = extractTenantId({ options, req });
+  const params = parseParams(
+    req.payloadAPI === "GraphQL" ? req.body.query : req.query,
+  );
+  const versions = await req.payload.findVersions({
+    req,
+    collection: globalCollection,
+    ...params,
+    where: {
+      "version.tenant": {
+        equals: tenantId,
+      },
+    },
+    sort: "-updatedAt",
+  });
+
+  return versions;
+};
+
+export const getGlobalVersionById = async ({
+  global,
+  req,
+}: {
+  global: GlobalConfig;
+  req: PayloadRequest;
+}) => {
+  const globalCollection = global.slug + "Globals";
+  const version = await req.payload.findVersionByID({
+    collection: globalCollection,
+    id: req.params.id,
+    req,
+  });
+
+  return version;
+};
+
+export const restoreGlobalVersion = async ({
+  global,
+  req,
+}: {
+  global: GlobalConfig;
+  req: PayloadRequest;
+}) => {
+  const globalCollection = global.slug + "Globals";
+  const updatedVersion = await req.payload.restoreVersion({
+    collection: globalCollection,
+    id: req.params.id,
+    req,
+  });
+
+  return updatedVersion;
 };
