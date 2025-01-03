@@ -63,12 +63,9 @@ export const tenancy =
               ...global,
               endpoints: [
                 ...(Array.isArray(global?.endpoints) ? global.endpoints : []),
-                createGetVersionsRoute(options, global) as Omit<
-                  Endpoint,
-                  "root"
-                >,
-                createGetVersionByIdRoute(global) as Omit<Endpoint, "root">,
-                createRestoreVersionRoute(global) as Omit<Endpoint, "root">,
+                createGetVersionsRoute(options, global),
+                createGetVersionByIdRoute(global),
+                createRestoreVersionRoute(global),
               ],
               fields: overrideFields(
                 global.fields.map(transformGlobalField),

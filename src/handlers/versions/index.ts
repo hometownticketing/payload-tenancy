@@ -8,14 +8,15 @@ import {
 import { handleError } from "../errorHandler";
 import { GlobalConfig } from "payload/dist/globals/config/types";
 import { TenancyOptions } from "../../options";
+import { Endpoint } from "payload/config";
 
 export const createGetVersionsRoute = (
   options: TenancyOptions,
   global: GlobalConfig,
-) => ({
+): Omit<Endpoint, "root"> => ({
   path: "/versions/",
   method: "get",
-  handler: async (req: PayloadRequest, res: Response) => {
+  handler: async (req, res) => {
     try {
       const versions = await getGlobalVersions({
         options,
@@ -29,10 +30,12 @@ export const createGetVersionsRoute = (
   },
 });
 
-export const createGetVersionByIdRoute = (global: GlobalConfig) => ({
+export const createGetVersionByIdRoute = (
+  global: GlobalConfig,
+): Omit<Endpoint, "root"> => ({
   path: "/versions/:id",
   method: "get",
-  handler: async (req: PayloadRequest, res: Response) => {
+  handler: async (req, res) => {
     try {
       if (!req.params.id) {
         return res.status(400).json({ error: "Version ID is required" });
@@ -54,10 +57,12 @@ export const createGetVersionByIdRoute = (global: GlobalConfig) => ({
   },
 });
 
-export const createRestoreVersionRoute = (global: GlobalConfig) => ({
+export const createRestoreVersionRoute = (
+  global: GlobalConfig,
+): Omit<Endpoint, "root"> => ({
   path: "/versions/:id",
   method: "post",
-  handler: async (req: PayloadRequest, res: Response) => {
+  handler: async (req, res) => {
     try {
       if (!req.params.id) {
         return res.status(400).json({ error: "Version ID is required" });
