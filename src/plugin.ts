@@ -27,11 +27,15 @@ import {
   createGlobalBeforeReadHook,
   createGlobalBeforeChangeHook,
   createGlobalAfterChangeHook,
+  getGlobalVersionById,
+  getGlobalVersions,
+  restoreGlobalVersion,
 } from "./hooks/global";
 import { overrideFields } from "./utils/overrideFields";
 import { transformGlobalCollectionField } from "./utils/transformGlobalCollectionField";
 import { transformGlobalField } from "./utils/transformGlobalField";
-import { CollectionConfig } from "payload/types";
+import { CollectionConfig, PayloadRequest } from "payload/types";
+import type { Response } from "express";
 
 export const tenancy =
   (partialOptions: Partial<TenancyOptions> = {}): Plugin =>
@@ -56,6 +60,101 @@ export const tenancy =
           ? global
           : {
               ...global,
+              endpoints: [
+                {
+                  path: "/versions/",
+                  method: "get",
+                  handler: async (req: PayloadRequest, res: Response) => {
+                    try {
+                      const versions = await getGlobalVersions({
+                        options,
+                        global,
+                        req,
+                      });
+                      res.status(200).json(versions);
+                    } catch (error) {
+                      console.error("Error fetching versions:", error);
+                      res.status(500).json({
+                        error: "Failed to fetch versions",
+                        message:
+                          error instanceof Error
+                            ? error.message
+                            : "Unknown error occurred",
+                      });
+                    }
+                  },
+                },
+                {
+                  path: "/versions/:id",
+                  method: "get",
+                  handler: async (req: PayloadRequest, res: Response) => {
+                    try {
+                      if (!req.params.id) {
+                        return res
+                          .status(400)
+                          .json({ error: "Version ID is required" });
+                      }
+
+                      const version = await getGlobalVersionById({
+                        global,
+                        req,
+                      });
+
+                      if (!version) {
+                        return res
+                          .status(404)
+                          .json({ error: "Version not found" });
+                      }
+
+                      res.status(200).json(version);
+                    } catch (error) {
+                      console.error("Error fetching version by ID:", error);
+                      res.status(500).json({
+                        error: "Failed to fetch version",
+                        message:
+                          error instanceof Error
+                            ? error.message
+                            : "Unknown error occurred",
+                      });
+                    }
+                  },
+                },
+                {
+                  path: "/versions/:id",
+                  method: "post",
+                  handler: async (req: PayloadRequest, res: Response) => {
+                    try {
+                      if (!req.params.id) {
+                        return res
+                          .status(400)
+                          .json({ error: "Version ID is required" });
+                      }
+
+                      const version = await restoreGlobalVersion({
+                        global,
+                        req,
+                      });
+
+                      if (!version) {
+                        return res
+                          .status(404)
+                          .json({ error: "Version not found" });
+                      }
+
+                      res.status(200).json(version);
+                    } catch (error) {
+                      console.error("Error restoring version:", error);
+                      res.status(500).json({
+                        error: "Failed to restore version",
+                        message:
+                          error instanceof Error
+                            ? error.message
+                            : "Unknown error occurred",
+                      });
+                    }
+                  },
+                },
+              ],
               fields: overrideFields(
                 global.fields.map(transformGlobalField),
                 [],

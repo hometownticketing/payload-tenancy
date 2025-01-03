@@ -47,9 +47,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createGlobalAfterChangeHook = exports.createGlobalBeforeChangeHook = exports.createGlobalBeforeReadHook = void 0;
+exports.restoreGlobalVersion = exports.getGlobalVersionById = exports.getGlobalVersions = exports.createGlobalAfterChangeHook = exports.createGlobalBeforeChangeHook = exports.createGlobalBeforeReadHook = void 0;
 var language_1 = require("graphql/language");
 var graphql_1 = require("../utils/graphql");
+// Default values as constants
+var DEFAULT_PAGE = 1;
+var DEFAULT_LIMIT = 10;
+var DEFAULT_DEPTH = 1;
 var createGlobalBeforeReadHook = function (_a) {
     var options = _a.options, config = _a.config, global = _a.global;
     return function (_a) {
@@ -240,3 +244,76 @@ var getQueryNameOfGlobal = function (req, slug) {
         }
     }
 };
+// Utility function to parse and validate params
+var parseParams = function (params) {
+    return {
+        page: params.page ? Math.max(1, parseInt(params.page)) : DEFAULT_PAGE,
+        limit: params.limit ? Math.max(1, parseInt(params.limit)) : DEFAULT_LIMIT,
+        depth: params.depth ? Math.max(1, parseInt(params.depth)) : DEFAULT_DEPTH,
+    };
+};
+var getGlobalVersions = function (_a) {
+    var options = _a.options, global = _a.global, req = _a.req;
+    return __awaiter(void 0, void 0, void 0, function () {
+        var globalCollection, tenantId, params, versions;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    globalCollection = global.slug + "Globals";
+                    tenantId = extractTenantId({ options: options, req: req });
+                    params = parseParams(req.payloadAPI === "GraphQL" ? req.body.query : req.query);
+                    return [4 /*yield*/, req.payload.findVersions(__assign(__assign({ req: req, collection: globalCollection }, params), { where: {
+                                "version.tenant": {
+                                    equals: tenantId,
+                                },
+                            }, sort: "-updatedAt" }))];
+                case 1:
+                    versions = _b.sent();
+                    return [2 /*return*/, versions];
+            }
+        });
+    });
+};
+exports.getGlobalVersions = getGlobalVersions;
+var getGlobalVersionById = function (_a) {
+    var global = _a.global, req = _a.req;
+    return __awaiter(void 0, void 0, void 0, function () {
+        var globalCollection, version;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    globalCollection = global.slug + "Globals";
+                    return [4 /*yield*/, req.payload.findVersionByID({
+                            collection: globalCollection,
+                            id: req.params.id,
+                            req: req,
+                        })];
+                case 1:
+                    version = _b.sent();
+                    return [2 /*return*/, version];
+            }
+        });
+    });
+};
+exports.getGlobalVersionById = getGlobalVersionById;
+var restoreGlobalVersion = function (_a) {
+    var global = _a.global, req = _a.req;
+    return __awaiter(void 0, void 0, void 0, function () {
+        var globalCollection, updatedVersion;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    globalCollection = global.slug + "Globals";
+                    return [4 /*yield*/, req.payload.restoreVersion({
+                            collection: globalCollection,
+                            id: req.params.id,
+                            req: req,
+                        })];
+                case 1:
+                    updatedVersion = _b.sent();
+                    return [2 /*return*/, updatedVersion];
+            }
+        });
+    });
+};
+exports.restoreGlobalVersion = restoreGlobalVersion;
