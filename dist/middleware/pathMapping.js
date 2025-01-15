@@ -61,12 +61,7 @@ var createPathMapping = function (_a) {
                         res.status(404).send();
                         return [2 /*return*/];
                     }
-                    encodedTenantSlug = req.url
-                        .slice(1)
-                        .split("/")
-                        .slice(0, 2)
-                        .map(function (a) { return decodeURIComponent(a); })
-                        .join("/");
+                    encodedTenantSlug = req.url.slice(1).split("/").slice(0, 2).join("/");
                     if (!encodedTenantSlug) {
                         res.status(404).send();
                         return [2 /*return*/];

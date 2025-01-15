@@ -36,12 +36,8 @@ export const createPathMapping =
 
     // There must be a path with at least one segment and that segment is tenant
     // slug.
-    const encodedTenantSlug = req.url
-      .slice(1)
-      .split("/")
-      .slice(0, 2)
-      .map((a) => decodeURIComponent(a))
-      .join("/");
+    const encodedTenantSlug = req.url.slice(1).split("/").slice(0, 2).join("/");
+
     if (!encodedTenantSlug) {
       res.status(404).send();
       return;
