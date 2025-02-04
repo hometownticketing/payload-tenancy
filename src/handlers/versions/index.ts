@@ -1,5 +1,3 @@
-import { Response } from "express";
-import { PayloadRequest } from "payload/types";
 import {
   getGlobalVersions,
   getGlobalVersionById,

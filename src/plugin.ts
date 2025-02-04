@@ -1,5 +1,5 @@
 import { TenancyOptions, validateOptions } from "./options";
-import { Endpoint, Plugin } from "payload/config";
+import { Plugin } from "payload/config";
 import {
   createResourceCreateAccess,
   createResourceReadAccess,
