@@ -20,6 +20,8 @@ const jestUnitConfig: Config = {
     "src/utils/**/*.ts",
     "src/access/**/*.ts",
     "src/middleware/**/*.ts",
+    "src/hooks/**/*.ts",
+    "src/fields/**/*.ts",
     "!src/**/index.ts",
   ],
   coverageReporters: ["json", "lcov", "text", "clover"],
