@@ -1,6 +1,6 @@
 import type { Config } from "jest";
 
-const jestConfig: Config = {
+const jestUnitConfig: Config = {
   transform: {
     "^.+\\.(t|j)sx?$": "@swc/jest",
   },
@@ -9,21 +9,22 @@ const jestConfig: Config = {
       "<rootDir>/tests/mocks/file.ts",
     "\\.(css|scss)$": "<rootDir>/tests/mocks/emptyModule.ts",
   },
-  globalSetup: "jest-environment-puppeteer/setup",
-  globalTeardown: "jest-environment-puppeteer/teardown",
-  testEnvironment: "jest-environment-puppeteer",
-  testTimeout: 60_000,
+  testEnvironment: "node",
+  testTimeout: 20_000,
   forceExit: true,
-  maxWorkers: 1,
-  testMatch: ["<rootDir>/tests/integration/**/*.test.ts"],
+  maxWorkers: "50%",
+  testMatch: ["<rootDir>/tests/unit/**/*.test.ts"],
   collectCoverage: true,
-  coverageDirectory: "coverage/integration",
+  coverageDirectory: "coverage/unit",
   collectCoverageFrom: [
-    "src/**/*.ts",
-    "!src/utils/**/*.ts",
+    "src/utils/**/*.ts",
+    "src/access/**/*.ts",
+    "src/middleware/**/*.ts",
+    "src/hooks/**/*.ts",
+    "src/fields/**/*.ts",
     "!src/**/index.ts",
   ],
   coverageReporters: ["json", "lcov", "text", "clover"],
 };
 
-export default jestConfig;
+export default jestUnitConfig;

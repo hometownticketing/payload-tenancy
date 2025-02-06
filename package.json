@@ -15,8 +15,8 @@
     "watch": "tsc --watch",
     "lint": "eslint .",
     "dev": "ts-node tests/dev.ts",
-    "test": "yarn test:unit && yarn test:integration",
-    "test:unit": "jest --config=jest.config.unit.ts --coverage"
+    "test": "yarn test:unit",
+    "test:unit": "jest --config=jest.config.ts --coverage"
   },
   "peerDependencies": {
     "payload": "^2.30.4"
