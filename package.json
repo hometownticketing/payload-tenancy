@@ -14,8 +14,9 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "lint": "eslint .",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "dev": "ts-node tests/dev.ts"
+    "dev": "ts-node tests/dev.ts",
+    "test": "yarn test:unit && yarn test:integration",
+    "test:unit": "jest --config=jest.config.unit.ts --coverage"
   },
   "peerDependencies": {
     "payload": "^2.30.4"
