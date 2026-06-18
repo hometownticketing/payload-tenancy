@@ -21,6 +21,9 @@
   "peerDependencies": {
     "payload": "^2.30.4"
   },
+  "overrides": {
+    "drizzle-kit": "0.20.14"
+  },
   "devDependencies": {
     "@payloadcms/bundler-vite": "^0.1.6",
     "@payloadcms/bundler-webpack": "^1.0.6",
