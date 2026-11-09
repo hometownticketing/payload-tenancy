@@ -48,6 +48,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createInitHook = void 0;
 var pathMapping_1 = require("../middleware/pathMapping");
 var domainMapping_1 = require("../middleware/domainMapping");
+var globalPlaceholders_1 = require("../utils/globalPlaceholders");
 /**
  * Move the last middleware up in the stack as far as possible (after
  * "expressInit" middleware).
@@ -80,6 +81,7 @@ var createInitHook = function (_a) {
                 case 0: return [4 /*yield*/, ((_a = config.onInit) === null || _a === void 0 ? void 0 : _a.call(config, payload))];
                 case 1:
                     _b.sent();
+                    (0, globalPlaceholders_1.rememberGlobalPlaceholders)({ options: options, config: config, payload: payload });
                     if (!payload.express) {
                         return [2 /*return*/];
                     }

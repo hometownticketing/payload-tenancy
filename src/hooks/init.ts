@@ -4,6 +4,7 @@ import { Config } from "payload/config";
 import { TenancyOptions } from "../options";
 import { createPathMapping } from "../middleware/pathMapping";
 import { createDomainMapping } from "../middleware/domainMapping";
+import { rememberGlobalPlaceholders } from "../utils/globalPlaceholders";
 
 export type InitHook = (payload: Payload) => void | Promise<void>;
 
@@ -45,6 +46,8 @@ export const createInitHook = ({
 
   return async (payload: Payload) => {
     await config.onInit?.(payload);
+
+    rememberGlobalPlaceholders({ options, config, payload });
 
     if (!payload.express) {
       return;

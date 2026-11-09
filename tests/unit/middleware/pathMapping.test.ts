@@ -5,6 +5,7 @@ import { TypeWithID } from "payload/dist/collections/config/types";
 import { createPathMapping } from "../../../src/middleware/pathMapping";
 import { TenancyOptions } from "../../../src/options";
 import { RequestWithTenant } from "../../../src/utils/requestWithTenant";
+import { forgetTenants } from "../../../src/utils/tenantCache";
 import { PaginatedDocs } from "payload/database";
 
 interface Tenant extends TypeWithID, Record<string, unknown> {
@@ -26,6 +27,8 @@ describe("createPathMapping middleware", () => {
   let mockNext: jest.Mock;
 
   beforeEach(() => {
+    forgetTenants();
+
     mockPayload = {
       find: jest.fn(),
     } as unknown as jest.Mocked<Payload>;
@@ -143,6 +146,9 @@ describe("createPathMapping middleware", () => {
             equals: "tenant-1/api",
           },
         },
+        depth: 0,
+        limit: 1,
+        pagination: false,
       });
 
       expect(mockReq.tenant).toEqual(mockTenant);
@@ -191,6 +197,9 @@ describe("createPathMapping middleware", () => {
             equals: "tenant space/api",
           },
         },
+        depth: 0,
+        limit: 1,
+        pagination: false,
       });
 
       expect(mockReq.tenant).toEqual(mockTenant);
@@ -239,6 +248,9 @@ describe("createPathMapping middleware", () => {
             equals: "tenant-1/nested",
           },
         },
+        depth: 0,
+        limit: 1,
+        pagination: false,
       });
 
       expect(mockReq.tenant).toEqual(mockTenant);
@@ -281,6 +293,9 @@ describe("createPathMapping middleware", () => {
             equals: "invalid-tenant/api",
           },
         },
+        depth: 0,
+        limit: 1,
+        pagination: false,
       });
       expect(mockNext).toHaveBeenCalled();
       expect(mockReq.url).toBe("/invalid-tenant/api/posts");

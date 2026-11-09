@@ -37,6 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createPathMapping = void 0;
+var tenantCache_1 = require("../utils/tenantCache");
 /**
  * Map the requested path to correct tenant. Adds the tenant to the request
  * object.
@@ -68,13 +69,14 @@ var createPathMapping = function (_a) {
                     }
                     // Check that tenant exists and attach it to the request.
                     _a = req;
-                    return [4 /*yield*/, payload.find({
-                            collection: options.tenantCollection,
-                            where: { slug: { equals: decodeURIComponent(encodedTenantSlug) } },
+                    return [4 /*yield*/, (0, tenantCache_1.findTenantBySlug)({
+                            payload: payload,
+                            tenantCollection: options.tenantCollection,
+                            slug: decodeURIComponent(encodedTenantSlug),
                         })];
                 case 1:
                     // Check that tenant exists and attach it to the request.
-                    _a.tenant = (_c.sent()).docs[0];
+                    _a.tenant = _c.sent();
                     // Remove tenant slug from the request URL so it can be processed normally
                     // by payload.
                     if (req.tenant) {

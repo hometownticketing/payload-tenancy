@@ -1,7 +1,66 @@
 import { Config } from "payload/config";
-import { CollectionAfterReadHook, CollectionConfig } from "payload/types";
+import {
+  CollectionAfterReadHook,
+  CollectionConfig,
+  Document,
+  PayloadRequest,
+} from "payload/types";
 import { TenancyOptions } from "../options";
 import { FileSize } from "payload/dist/uploads/types";
+import { RequestWithTenant } from "../utils/requestWithTenant";
+import { findTenantById } from "../utils/tenantCache";
+
+const readTenantId = (value: unknown): string | number | undefined => {
+  const id =
+    typeof value === "object" && value !== null
+      ? (value as { id?: unknown }).id
+      : value;
+
+  return typeof id === "string" || typeof id === "number" ? id : undefined;
+};
+
+const findDocumentTenant = async ({
+  doc,
+  req,
+  collection,
+  tenantCollection,
+}: {
+  doc: Document;
+  req: PayloadRequest;
+  collection: CollectionConfig;
+  tenantCollection: string;
+}): Promise<Document | undefined> => {
+  // Re-read the raw document only when field config has kept the tenant off
+  // the one being returned.
+  const value =
+    "tenant" in doc
+      ? doc.tenant
+      : (
+          await req.payload.db.findOne<Document>({
+            collection: collection.slug,
+            where: { id: { equals: doc.id } },
+            req,
+          })
+        )?.tenant;
+
+  const tenantId = readTenantId(value);
+
+  if (!tenantId) {
+    return undefined;
+  }
+
+  const requestTenant = (req as RequestWithTenant).tenant;
+
+  if (requestTenant?.id === tenantId) {
+    return requestTenant;
+  }
+
+  return findTenantById({
+    payload: req.payload,
+    tenantCollection,
+    id: tenantId,
+  });
+};
 
 /**
  * Fix file URLs when using path tenant isolation strategy.
@@ -29,29 +88,18 @@ export const createUploadAfterReadHook =
 
     let basePath = parameters.staticURL ?? "/media";
     if (isolationStrategy === "path") {
-      const { payload } = req;
-      const rawDocument = await payload.db.findOne({
-        collection: collection.slug,
-        where: { id: { equals: doc.id } },
+      const tenant = await findDocumentTenant({
+        doc,
         req,
+        collection,
+        tenantCollection,
       });
-      if (
-        !rawDocument ||
-        !("tenant" in rawDocument) ||
-        (typeof rawDocument.tenant !== "string" &&
-          typeof rawDocument.tenant !== "number") ||
-        !rawDocument.tenant
-      ) {
+
+      if (!tenant) {
         return doc;
       }
 
-      const { tenant } = rawDocument;
-      const { slug } = await payload.findByID({
-        collection: tenantCollection,
-        id: tenant,
-        depth: 0,
-      });
-      basePath = `/${slug}${basePath}`;
+      basePath = `/${tenant.slug}${basePath}`;
     }
 
     return {
