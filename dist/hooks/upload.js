@@ -48,6 +48,51 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createUploadAfterReadHook = void 0;
+var tenantCache_1 = require("../utils/tenantCache");
+var readTenantId = function (value) {
+    var id = typeof value === "object" && value !== null
+        ? value.id
+        : value;
+    return typeof id === "string" || typeof id === "number" ? id : undefined;
+};
+var findDocumentTenant = function (_a) {
+    var doc = _a.doc, req = _a.req, collection = _a.collection, tenantCollection = _a.tenantCollection;
+    return __awaiter(void 0, void 0, void 0, function () {
+        var value, _b, tenantId, requestTenant;
+        var _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
+                case 0:
+                    if (!("tenant" in doc)) return [3 /*break*/, 1];
+                    _b = doc.tenant;
+                    return [3 /*break*/, 3];
+                case 1: return [4 /*yield*/, req.payload.db.findOne({
+                        collection: collection.slug,
+                        where: { id: { equals: doc.id } },
+                        req: req,
+                    })];
+                case 2:
+                    _b = (_c = (_d.sent())) === null || _c === void 0 ? void 0 : _c.tenant;
+                    _d.label = 3;
+                case 3:
+                    value = _b;
+                    tenantId = readTenantId(value);
+                    if (!tenantId) {
+                        return [2 /*return*/, undefined];
+                    }
+                    requestTenant = req.tenant;
+                    if ((requestTenant === null || requestTenant === void 0 ? void 0 : requestTenant.id) === tenantId) {
+                        return [2 /*return*/, requestTenant];
+                    }
+                    return [2 /*return*/, (0, tenantCache_1.findTenantById)({
+                            payload: req.payload,
+                            tenantCollection: tenantCollection,
+                            id: tenantId,
+                        })];
+            }
+        });
+    });
+};
 /**
  * Fix file URLs when using path tenant isolation strategy.
  *
@@ -59,7 +104,7 @@ var createUploadAfterReadHook = function (_a) {
     return function (_a) {
         var doc = _a.doc, req = _a.req;
         return __awaiter(void 0, void 0, void 0, function () {
-            var parameters, basePath, payload, rawDocument, tenant, slug;
+            var parameters, basePath, tenant;
             var _b, _c, _d;
             return __generator(this, function (_e) {
                 switch (_e.label) {
@@ -70,33 +115,21 @@ var createUploadAfterReadHook = function (_a) {
                             return [2 /*return*/, doc];
                         }
                         basePath = (_c = parameters.staticURL) !== null && _c !== void 0 ? _c : "/media";
-                        if (!(isolationStrategy === "path")) return [3 /*break*/, 3];
-                        payload = req.payload;
-                        return [4 /*yield*/, payload.db.findOne({
-                                collection: collection.slug,
-                                where: { id: { equals: doc.id } },
+                        if (!(isolationStrategy === "path")) return [3 /*break*/, 2];
+                        return [4 /*yield*/, findDocumentTenant({
+                                doc: doc,
                                 req: req,
+                                collection: collection,
+                                tenantCollection: tenantCollection,
                             })];
                     case 1:
-                        rawDocument = _e.sent();
-                        if (!rawDocument ||
-                            !("tenant" in rawDocument) ||
-                            (typeof rawDocument.tenant !== "string" &&
-                                typeof rawDocument.tenant !== "number") ||
-                            !rawDocument.tenant) {
+                        tenant = _e.sent();
+                        if (!tenant) {
                             return [2 /*return*/, doc];
                         }
-                        tenant = rawDocument.tenant;
-                        return [4 /*yield*/, payload.findByID({
-                                collection: tenantCollection,
-                                id: tenant,
-                                depth: 0,
-                            })];
-                    case 2:
-                        slug = (_e.sent()).slug;
-                        basePath = "/".concat(slug).concat(basePath);
-                        _e.label = 3;
-                    case 3: return [2 /*return*/, __assign(__assign({}, doc), { url: "".concat(serverURL !== null && serverURL !== void 0 ? serverURL : "").concat(basePath, "/").concat(doc.filename), sizes: __assign({}, Object.fromEntries(Object.entries((_d = doc.sizes) !== null && _d !== void 0 ? _d : {}).map(function (_a) {
+                        basePath = "/".concat(tenant.slug).concat(basePath);
+                        _e.label = 2;
+                    case 2: return [2 /*return*/, __assign(__assign({}, doc), { url: "".concat(serverURL !== null && serverURL !== void 0 ? serverURL : "").concat(basePath, "/").concat(doc.filename), sizes: __assign({}, Object.fromEntries(Object.entries((_d = doc.sizes) !== null && _d !== void 0 ? _d : {}).map(function (_a) {
                                 var name = _a[0], size = _a[1];
                                 return [
                                     name,

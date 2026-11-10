@@ -3,6 +3,7 @@ import { Payload } from "payload";
 import { Config } from "payload/config";
 import { TenancyOptions } from "../options";
 import { RequestWithTenant } from "../utils/requestWithTenant";
+import { findTenantBySlug } from "../utils/tenantCache";
 
 /**
  * Map the requested path to correct tenant. Adds the tenant to the request
@@ -44,12 +45,11 @@ export const createPathMapping =
     }
 
     // Check that tenant exists and attach it to the request.
-    req.tenant = (
-      await payload.find({
-        collection: options.tenantCollection,
-        where: { slug: { equals: decodeURIComponent(encodedTenantSlug) } },
-      })
-    ).docs[0];
+    req.tenant = await findTenantBySlug({
+      payload,
+      tenantCollection: options.tenantCollection,
+      slug: decodeURIComponent(encodedTenantSlug),
+    });
 
     // Remove tenant slug from the request URL so it can be processed normally
     // by payload.

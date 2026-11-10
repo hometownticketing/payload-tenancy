@@ -200,7 +200,7 @@ var getGlobal = function (_a) {
                 case 1:
                     doc = (_d.sent()).docs[0];
                     if (!(!isDraft && (doc === null || doc === void 0 ? void 0 : doc._status) === "draft")) return [3 /*break*/, 3];
-                    return [4 /*yield*/, payload.findVersions({
+                    return [4 /*yield*/, payload.db.findVersions({
                             req: req,
                             collection: globalCollection,
                             where: {
@@ -211,8 +211,8 @@ var getGlobal = function (_a) {
                                     equals: "published",
                                 },
                             },
-                            depth: 0,
                             limit: 1,
+                            pagination: false,
                             sort: "-updatedAt",
                         })];
                 case 2:

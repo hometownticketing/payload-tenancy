@@ -8,7 +8,7 @@ import {
 } from "../../../src/hooks/global";
 import { TenancyOptions } from "../../../src/options";
 import { Config } from "payload/config";
-import { GlobalConfig } from "payload/types";
+import { GlobalConfig, PayloadRequest } from "payload/types";
 import { RequestWithTenant } from "../../../src/utils/requestWithTenant";
 
 // Mock the graphql utilities
@@ -44,6 +44,9 @@ describe("Global Hooks", () => {
       payload: {
         find: jest.fn(),
         findVersions: jest.fn(),
+        db: {
+          findVersions: jest.fn(),
+        },
         create: jest.fn(),
         update: jest.fn(),
         findVersionByID: jest.fn(),
@@ -123,6 +126,45 @@ describe("Global Hooks", () => {
 
       expect(mockFind).toHaveBeenCalled();
       expect(result).toEqual(existingDoc);
+    });
+
+    it("should return the latest published version, without a count, when the document is a draft", async () => {
+      const publishedVersion = { id: "published-doc" };
+      const mockFind = mockReq.payload.find as jest.Mock;
+      mockFind.mockResolvedValue({
+        docs: [{ id: "draft-doc", _status: "draft" }],
+      });
+
+      const mockDbFindVersions = mockReq.payload.db.findVersions as jest.Mock;
+      mockDbFindVersions.mockResolvedValue({
+        docs: [{ version: publishedVersion }],
+      });
+
+      const hook = createGlobalBeforeReadHook({
+        options: mockOptions,
+        config: mockConfig,
+        global: mockGlobal,
+      });
+
+      const result = await hook({
+        req: mockReq as unknown as PayloadRequest,
+        context: undefined,
+        doc: undefined,
+        global: undefined,
+      });
+
+      expect(mockDbFindVersions).toHaveBeenCalledWith({
+        req: mockReq,
+        collection: "testGlobalGlobals",
+        where: {
+          "version.tenant": { equals: "test-tenant-123" },
+          "version._status": { equals: "published" },
+        },
+        limit: 1,
+        pagination: false,
+        sort: "-updatedAt",
+      });
+      expect(result).toBe(publishedVersion);
     });
 
     it("should handle missing tenant", async () => {

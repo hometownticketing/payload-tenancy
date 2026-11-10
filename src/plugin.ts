@@ -29,6 +29,7 @@ import {
   createGlobalAfterChangeHook,
 } from "./hooks/global";
 import { overrideFields } from "./utils/overrideFields";
+import { forgetTenants } from "./utils/tenantCache";
 import { transformGlobalCollectionField } from "./utils/transformGlobalCollectionField";
 import { transformGlobalField } from "./utils/transformGlobalField";
 import { CollectionConfig } from "payload/types";
@@ -178,6 +179,7 @@ export const tenancy =
                         options,
                         config,
                       }),
+                      forgetTenants,
                     ],
                     beforeDelete: [
                       ...(collection.hooks?.beforeDelete || []),
@@ -185,6 +187,10 @@ export const tenancy =
                         options,
                         config,
                       }),
+                    ],
+                    afterDelete: [
+                      ...(collection.hooks?.afterDelete || []),
+                      forgetTenants,
                     ],
                   },
                   admin: {

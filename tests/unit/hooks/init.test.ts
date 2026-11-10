@@ -1,6 +1,7 @@
 import { createInitHook } from "../../../src/hooks/init";
 import { createPathMapping } from "../../../src/middleware/pathMapping";
 import { createDomainMapping } from "../../../src/middleware/domainMapping";
+import { rememberGlobalPlaceholders } from "../../../src/utils/globalPlaceholders";
 import { TenancyOptions } from "../../../src/options";
 import { Config } from "payload/config";
 import { Payload } from "payload";
@@ -13,6 +14,10 @@ jest.mock("../../../src/middleware/pathMapping", () => ({
 
 jest.mock("../../../src/middleware/domainMapping", () => ({
   createDomainMapping: jest.fn(),
+}));
+
+jest.mock("../../../src/utils/globalPlaceholders", () => ({
+  rememberGlobalPlaceholders: jest.fn(),
 }));
 
 describe("Init Hook", () => {
@@ -61,6 +66,19 @@ describe("Init Hook", () => {
     const hook = createInitHook({ options: mockOptions, config: mockConfig });
     await hook(mockPayload as Payload);
     expect(mockConfig.onInit).toHaveBeenCalledWith(mockPayload);
+  });
+
+  it("should remember global placeholders, even without express", async () => {
+    const payloadWithoutExpress = { ...mockPayload, express: undefined };
+    const hook = createInitHook({ options: mockOptions, config: mockConfig });
+
+    await hook(payloadWithoutExpress as Payload);
+
+    expect(rememberGlobalPlaceholders).toHaveBeenCalledWith({
+      options: mockOptions,
+      config: mockConfig,
+      payload: payloadWithoutExpress,
+    });
   });
 
   it("should return early if express is not available", async () => {

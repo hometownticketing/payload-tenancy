@@ -38,6 +38,7 @@ var auth_2 = require("./hooks/auth");
 var upload_1 = require("./hooks/upload");
 var global_1 = require("./hooks/global");
 var overrideFields_1 = require("./utils/overrideFields");
+var tenantCache_1 = require("./utils/tenantCache");
 var transformGlobalCollectionField_1 = require("./utils/transformGlobalCollectionField");
 var transformGlobalField_1 = require("./utils/transformGlobalField");
 var versions_1 = require("./handlers/versions");
@@ -113,7 +114,7 @@ var tenancy = function (partialOptions) {
                 },
             }); }), true), ((_c = config.collections) !== null && _c !== void 0 ? _c : [])
                 .map(function (collection) {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
                 return collection.slug === options.tenantCollection
                     ? // Modify tenant collection
                      __assign(__assign({}, collection), { access: __assign(__assign({}, collection.access), { read: (0, tenant_1.createTenantReadAccess)({
@@ -142,34 +143,37 @@ var tenancy = function (partialOptions) {
                                     options: options,
                                     config: config,
                                 }),
+                                tenantCache_1.forgetTenants,
                             ], false), beforeDelete: __spreadArray(__spreadArray([], (((_e = collection.hooks) === null || _e === void 0 ? void 0 : _e.beforeDelete) || []), true), [
                                 (0, tenant_2.createTenantBeforeDeleteHook)({
                                     options: options,
                                     config: config,
                                 }),
+                            ], false), afterDelete: __spreadArray(__spreadArray([], (((_f = collection.hooks) === null || _f === void 0 ? void 0 : _f.afterDelete) || []), true), [
+                                tenantCache_1.forgetTenants,
                             ], false) }), admin: __assign(__assign({}, collection.admin), { disableDuplicate: true }) }) : collection.auth
                     ? // Modify user collections
                      __assign(__assign({}, collection), { access: __assign(__assign({}, collection.access), { create: (0, user_1.createUserCreateAccess)({
                                 options: options,
                                 config: config,
-                                original: (_f = collection.access) === null || _f === void 0 ? void 0 : _f.create,
+                                original: (_g = collection.access) === null || _g === void 0 ? void 0 : _g.create,
                             }), read: (0, user_1.createUserReadAccess)({
                                 options: options,
                                 config: config,
-                                original: (_g = collection.access) === null || _g === void 0 ? void 0 : _g.read,
+                                original: (_h = collection.access) === null || _h === void 0 ? void 0 : _h.read,
                             }), update: (0, user_1.createUserReadAccess)({
                                 options: options,
                                 config: config,
-                                original: (_h = collection.access) === null || _h === void 0 ? void 0 : _h.update,
+                                original: (_j = collection.access) === null || _j === void 0 ? void 0 : _j.update,
                             }), delete: (0, user_1.createUserReadAccess)({
                                 options: options,
                                 config: config,
-                                original: (_j = collection.access) === null || _j === void 0 ? void 0 : _j.delete,
+                                original: (_k = collection.access) === null || _k === void 0 ? void 0 : _k.delete,
                             }), admin: (0, auth_1.createAdminAccess)({
                                 options: options,
                                 config: config,
-                                original: (_k = collection.access) === null || _k === void 0 ? void 0 : _k.admin,
-                            }) }), fields: (0, overrideFields_1.overrideFields)(collection.fields, [], [(0, userTenant_1.createUserTenantField)({ options: options, config: config, collection: collection })]), hooks: __assign(__assign({}, collection.hooks), { beforeLogin: __spreadArray(__spreadArray([], (((_l = collection.hooks) === null || _l === void 0 ? void 0 : _l.beforeLogin) || []), true), [
+                                original: (_l = collection.access) === null || _l === void 0 ? void 0 : _l.admin,
+                            }) }), fields: (0, overrideFields_1.overrideFields)(collection.fields, [], [(0, userTenant_1.createUserTenantField)({ options: options, config: config, collection: collection })]), hooks: __assign(__assign({}, collection.hooks), { beforeLogin: __spreadArray(__spreadArray([], (((_m = collection.hooks) === null || _m === void 0 ? void 0 : _m.beforeLogin) || []), true), [
                                 (0, auth_2.createRestrictLogin)({ options: options, config: config }),
                             ], false) }) }) : options.sharedCollections.includes(collection.slug)
                     ? // Do not modify the collection (opt-out)
@@ -178,19 +182,19 @@ var tenancy = function (partialOptions) {
                      __assign(__assign({}, collection), { access: __assign(__assign({}, collection.access), { create: (0, resource_1.createResourceCreateAccess)({
                                 options: options,
                                 config: config,
-                                original: (_m = collection.access) === null || _m === void 0 ? void 0 : _m.create,
+                                original: (_o = collection.access) === null || _o === void 0 ? void 0 : _o.create,
                             }), read: (0, resource_1.createResourceReadAccess)({
                                 options: options,
                                 config: config,
-                                original: (_o = collection.access) === null || _o === void 0 ? void 0 : _o.read,
+                                original: (_p = collection.access) === null || _p === void 0 ? void 0 : _p.read,
                             }), update: (0, resource_1.createResourceReadAccess)({
                                 options: options,
                                 config: config,
-                                original: (_p = collection.access) === null || _p === void 0 ? void 0 : _p.update,
+                                original: (_q = collection.access) === null || _q === void 0 ? void 0 : _q.update,
                             }), delete: (0, resource_1.createResourceReadAccess)({
                                 options: options,
                                 config: config,
-                                original: (_q = collection.access) === null || _q === void 0 ? void 0 : _q.delete,
+                                original: (_r = collection.access) === null || _r === void 0 ? void 0 : _r.delete,
                             }) }), fields: (0, overrideFields_1.overrideFields)(collection.fields, [], [
                             (0, resourceTenant_1.createResourceTenantField)({
                                 options: options,

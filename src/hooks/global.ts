@@ -217,9 +217,11 @@ const getGlobal = async ({
   });
 
   if (!isDraft && doc?._status === "draft") {
+    // The database adapter, unlike the local API, can skip the count. The
+    // version is returned as the global, which runs the read hooks on it.
     const {
       docs: [latestPublishedVersion],
-    } = await payload.findVersions({
+    } = await payload.db.findVersions({
       req,
       collection: globalCollection,
       where: {
@@ -230,8 +232,8 @@ const getGlobal = async ({
           equals: "published",
         },
       },
-      depth: 0,
       limit: 1,
+      pagination: false,
       sort: "-updatedAt",
     });
 

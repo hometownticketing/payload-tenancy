@@ -21,11 +21,11 @@ export declare const getGlobalVersions: ({ options, global, req, }: {
     options: TenancyOptions;
     global: GlobalConfig;
     req: PayloadRequest;
-}) => Promise<import("payload/dist/database/types").PaginatedDocs<import("payload/dist/versions/types").TypeWithVersion<import("payload/types").TypeWithID & Record<string, unknown>>>>;
+}) => Promise<import("payload/database").PaginatedDocs<import("payload/database").TypeWithVersion<import("payload/types").TypeWithID & Record<string, unknown>>>>;
 export declare const getGlobalVersionById: ({ global, req, }: {
     global: GlobalConfig;
     req: PayloadRequest;
-}) => Promise<import("payload/dist/versions/types").TypeWithVersion<import("payload/types").TypeWithID & Record<string, unknown>>>;
+}) => Promise<import("payload/database").TypeWithVersion<import("payload/types").TypeWithID & Record<string, unknown>>>;
 export declare const restoreGlobalVersion: ({ global, req, }: {
     global: GlobalConfig;
     req: PayloadRequest;
